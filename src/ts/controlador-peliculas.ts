@@ -1,18 +1,20 @@
 /* Aquí deberás crear la clase para el controlador de películas, que se encargará de extraer datos y realizar operaciones sobre el conjunto de las películas */
-import { Formato, Pelicula } from "./datos/pelicula";
-import { DirectorPeliculas } from "./interface-director-peliculas";
-import * as dataJSON from "./peliculas.json";
+import { Pelicula } from "./datos/pelicula";
+import { PeliculaJSON } from "./interfaz-PeliculaJSON";
 
 export class ControladorPeliculas {
 
   private peliculas: Pelicula[] = [];
 
+  private peliculasVistas: Pelicula[];
+  private peliculasPendientes: Pelicula[];
+
   constructor() {
-    this.cargarPeliculas();
+    // this.cargarPeliculas();
   }
 
-  private cargarPeliculas(): void {
-    for (const data of dataJSON.peliculas) {
+  public cargarPeliculas(peliculas: PeliculaJSON[]): void {
+    for (const data of peliculas) {
       this.peliculas.push(new Pelicula(
         data.id,
         data.titulo,
@@ -25,10 +27,16 @@ export class ControladorPeliculas {
         data.valoracion,
       ));
     }
+    this.peliculasVistas = this.filtrarPeliculasVistas(true);
+    this.peliculasPendientes = this.filtrarPeliculasVistas(false);
+  }
+
+  private filtrarPeliculasVistas(vistas: boolean): Pelicula[] {
+    return this.peliculas.filter( (pelicula) => pelicula.vista === vistas);
   }
 
   public getPeliculasVistas(vistas: boolean): Pelicula[] {
-    return this.peliculas.filter( (pelicula) => pelicula.vista === vistas);
+    return vistas ? this.peliculasVistas : this.peliculasPendientes;
   }
 
   public getNumPeliculas(vistas: boolean) {
@@ -44,17 +52,14 @@ export class ControladorPeliculas {
   }
 
   public getPeliculaMasReciente() {
-    return this.peliculas.reduce((acum, pelicula) => acum.fecha > pelicula.fecha ? acum : pelicula);
+    return this.peliculas.reduce((acum, pelicula) => acum.esPosteriorA(pelicula) ? acum : pelicula);
   }
 
-  public getDirectoresYPeliculas(): DirectorPeliculas[] {
-    const directores: DirectorPeliculas[] = this.peliculas.map(pelicula => {
-      return {
-        nombre: pelicula.director,
-        peliculas: this.peliculas.filter((p) => p.director === pelicula.director),
-      } as DirectorPeliculas;
-    });
-    // Puesto que peliculas se genera a partir de director, no es necesario compararlo
-    return directores.filter((director, indice, listaDirectores) => listaDirectores.findIndex(item => item.nombre === director.nombre) === indice);
+  public getDirectores(): string[] {
+    return this.peliculas.map((p) => p.director).filter((item, i, l) => l.indexOf(item) === i);
+  }
+
+  public getPeliculasDirector(director: string): Pelicula[] {
+    return this.peliculas.filter((item) => item.director === director);
   }
 }

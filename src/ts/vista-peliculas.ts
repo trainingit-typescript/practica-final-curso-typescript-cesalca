@@ -1,7 +1,8 @@
 /* Aquí deberás crear la clase para el controlador de la vista, que será el que se comunique directamente con el HTML */
 import { ControladorPeliculas } from "./controlador-peliculas";
-import {Formato, Pelicula} from "./datos/pelicula";
-import { DirectorPeliculas } from "./interface-director-peliculas";
+import { Formato } from "./datos/enum-formato";
+import { Pelicula } from "./datos/pelicula";
+import { Valoracion } from "./datos/type-valoracion";
 export class VistaPeliculas {
   // private HTML: any = {};
 
@@ -24,14 +25,15 @@ export class VistaPeliculas {
 
   constructor(private cPeliculas: ControladorPeliculas) {
     this.cargaHTML();
-    this.pintaPeliculas(this.cPeliculas.getPeliculasVistas(true), this.htmlVistas);
-    this.pintaPeliculas(this.cPeliculas.getPeliculasVistas(false), this.htmlPendientes);
+    this.pintaPeliculas(true);
+    this.pintaPeliculas(false);
     this.pintaNumPeliculas();
     this.pintaEstadistica(this.cPeliculas.getPeliculaMejorValorada(), this.htmlPeliculaValorada);
     this.pintaEstadistica(this.cPeliculas.getPeliculaConMasOscars(), this.htmlPeliculaOscars);
     this.pintaEstadistica(this.cPeliculas.getPeliculaMasReciente(), this.htmlPeliculaReciente);
-    this.pintaDirectores(this.cPeliculas.getDirectoresYPeliculas());
+    this.pintaDirectores();
   }
+
   private cargaHTML(): void {
     this.htmlVistas = document.querySelector(".js-lista-vistas");
     this.htmlNumVistas = document.querySelector(".js-n-peliculas-vistas");
@@ -50,17 +52,22 @@ export class VistaPeliculas {
     this.htmlNumPendientes.textContent = this.cPeliculas.getNumPeliculas(false).toString();
     this.htmlNumVistas.textContent = this.cPeliculas.getNumPeliculas(true).toString();
   }
-  private limpiarLista(wrapper: HTMLElement) {
-    wrapper.querySelectorAll(".js-pelicula").forEach((item) => { item.remove(); });
 
+  private limpiarListaPeliculas(vistas: boolean) {
+    const wrapper: HTMLElement = (vistas ? this.htmlVistas : this.htmlPendientes);
+    wrapper.querySelectorAll(".js-pelicula").forEach((item) => { item.remove(); });
   }
-  private pintaPeliculas(peliculas: Pelicula[], wrapper: HTMLElement) {
-    this.limpiarLista(wrapper);
+
+  private pintaPeliculas(vistas: boolean) {
+    const peliculas = this.cPeliculas.getPeliculasVistas(vistas);
+    const wrapper = (vistas ? this.htmlVistas : this.htmlPendientes);
+
+    this.limpiarListaPeliculas(vistas);
     for (const pelicula of peliculas) {
       const item: HTMLElement = this.htmlPeliculaBase.cloneNode(true) as HTMLElement;
       item.querySelector(".js-titulo").textContent = pelicula.titulo;
       item.querySelector(".js-director").textContent = pelicula.director;
-      item.querySelector(".js-anyo").textContent = pelicula.fecha.getFullYear().toString();
+      item.querySelector(".js-anyo").textContent = pelicula.getAnyo().toString();
 
       const img: HTMLImageElement = item.querySelector(".js-cartel");
       img.src = pelicula.cartel;
@@ -68,21 +75,20 @@ export class VistaPeliculas {
       img.title = pelicula.titulo;
 
       if (pelicula.oscars === 0) {
-        item.querySelector(".js-oscars").classList.add("hide");
+        item.querySelector(".js-oscars").remove();
       }
       item.querySelector(".js-formato-" + Formato[pelicula.formato].toLowerCase()).classList.remove("hide");
 
-      item.querySelector(".js-valoracion").setAttribute("data-puntos", pelicula.valoracion.toString());
-      for (let v = 1; v < 6; v++) {
-        const li = item.querySelector(".js-valoracion-" + v.toString());
-        if (v <= pelicula.valoracion) {
-          li.classList.remove("glyphicon-star-empty");
-          li.classList.add("glyphicon-star");
-        } else {
-          li.classList.add("glyphicon-star-empty");
-          li.classList.remove("glyphicon-star");
-        }
+      item.querySelector<HTMLElement>(".js-valoracion").dataset.puntos = vistas ? pelicula.valoracion.toString() : "";
+
+      // Las no vistas tienen valoracion 0, con lo que siempre se asigna glyphicon-star-empty
+      for (let v: Valoracion = 1; v < 6; v++) {
+        const li = item.querySelector<HTMLElement>(".js-valoracion-" + v.toString());
+        li.classList.remove("glyphicon-star-empty");
+        li.classList.remove("glyphicon-star");
+        li.classList.add(v <= pelicula.valoracion ? "glyphicon-star" : "glyphicon-star-empty");
       }
+
       wrapper.appendChild(item);
     }
   }
@@ -96,21 +102,22 @@ export class VistaPeliculas {
     img.title = pelicula.titulo;
   }
 
-  private pintaDirectores(directoresPeliculas: DirectorPeliculas[]) {
+  private pintaDirectores() {
     // Limpiamos los contenidos
     this.htmlDirectores.querySelectorAll("li").forEach((e) => { e.remove(); });
-    for (const director of directoresPeliculas) {
+    for (const director of this.cPeliculas.getDirectores()) {
       const directorElement: HTMLElement = this.htmlDirectorBase.cloneNode(true) as HTMLElement;
-      directorElement.querySelector(".js-director").textContent = director.nombre;
+      directorElement.querySelector(".js-director").textContent = director;
       const directoresPeliculasElement = directorElement.querySelector(".js-lista-peliculas-directores");
       // Limpiamos los contenidos
       directoresPeliculasElement.childNodes.forEach((e) => { e.remove(); });
-      for (const p of director.peliculas) {
+      for (const p of this.cPeliculas.getPeliculasDirector(director)) {
         const item: HTMLElement = this.htmlPeliculaDirectorBase.cloneNode(true) as HTMLElement;
         item.querySelector(".js-titulo").textContent = p.titulo;
-        item.querySelector(".js-anyo").textContent = p.fecha.getFullYear().toString();
-        directorElement.appendChild(item);
+        item.querySelector(".js-anyo").textContent = p.getAnyo().toString();
+        directoresPeliculasElement.appendChild(item);
       }
+
       this.htmlDirectores.appendChild(directorElement);
     }
   }

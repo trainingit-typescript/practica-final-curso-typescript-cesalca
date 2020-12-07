@@ -1,14 +1,15 @@
 /* Aquí deberás crear la clase para instanciar cada una de las películas */
 import * as moment from "moment";
-export enum Formato {
-  DVD,
-  archivo,
-  VHS,
-}
+
+import { Formato } from "./enum-formato";
+import { Valoracion } from "./type-valoracion";
+
 export class Pelicula {
 
   public formato: Formato;
-  public fecha: Date;
+  private fecha: moment.Moment;
+  public valoracion: Valoracion;
+
   constructor(
     public id: number,
     public titulo: string,
@@ -18,10 +19,18 @@ export class Pelicula {
     public vista: boolean,
     format: string,
     public oscars: number,
-    public valoracion: number,
+    valoracion: number,
   ) {
-    this.fecha = moment(fecha, "DD-MM-YYYY").toDate();
+    this.fecha = moment(fecha, "DD-MM-YYYY");
     this.formato = Formato[format];
+    this.valoracion = valoracion as Valoracion;
+  }
 
+  public getAnyo(): number {
+    return this.fecha.year();
+  }
+
+  public esPosteriorA(p: Pelicula): boolean {
+    return this.fecha.isAfter(p.fecha);
   }
 }
