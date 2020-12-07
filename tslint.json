@@ -11,7 +11,8 @@
     "member-ordering": false,
     "interface-name": false,
     "arrow-parens": false,
-    "max-line-length": false
+    "max-line-length": false,
+    "alwaysShowRuleFailuresAsWarnings": true
   },
   "rulesDirectory": []
 }

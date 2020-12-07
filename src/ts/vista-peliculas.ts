@@ -3,36 +3,52 @@ import { ControladorPeliculas } from "./controlador-peliculas";
 import {Formato, Pelicula} from "./datos/pelicula";
 import { DirectorPeliculas } from "./interface-director-peliculas";
 export class VistaPeliculas {
-  private HTML: any = {};
+  // private HTML: any = {};
+
+  /**
+   * Esencialmente this.htmlVistas es equivalente a this.HTML.vistas
+   * pero esta forma, aunque un poco más engorrosa, me restringe el tipado
+   * de los objetos.
+   */
+  private htmlVistas: HTMLElement;
+  private htmlNumVistas: HTMLElement;
+  private htmlPendientes: HTMLElement;
+  private htmlNumPendientes: HTMLElement;
+  private htmlPeliculaValorada: HTMLElement;
+  private htmlPeliculaOscars: HTMLElement;
+  private htmlPeliculaReciente: HTMLElement;
+  private htmlPeliculaBase: HTMLElement;
+  private htmlDirectores: HTMLElement;
+  private htmlDirectorBase: HTMLElement;
+  private htmlPeliculaDirectorBase: HTMLElement;
 
   constructor(private cPeliculas: ControladorPeliculas) {
     this.cargaHTML();
-    this.pintaPeliculas(this.cPeliculas.getPeliculasVistas(true), this.HTML.vistas);
-    this.pintaPeliculas(this.cPeliculas.getPeliculasVistas(false), this.HTML.pendientes);
+    this.pintaPeliculas(this.cPeliculas.getPeliculasVistas(true), this.htmlVistas);
+    this.pintaPeliculas(this.cPeliculas.getPeliculasVistas(false), this.htmlPendientes);
     this.pintaNumPeliculas();
-    this.pintaEstadistica(this.cPeliculas.getPeliculaMejorValorada(), this.HTML.peliculaValorada);
-    this.pintaEstadistica(this.cPeliculas.getPeliculaConMasOscars(), this.HTML.peliculaOscars);
-    this.pintaEstadistica(this.cPeliculas.getPeliculaMasReciente(), this.HTML.peliculaReciente);
+    this.pintaEstadistica(this.cPeliculas.getPeliculaMejorValorada(), this.htmlPeliculaValorada);
+    this.pintaEstadistica(this.cPeliculas.getPeliculaConMasOscars(), this.htmlPeliculaOscars);
+    this.pintaEstadistica(this.cPeliculas.getPeliculaMasReciente(), this.htmlPeliculaReciente);
     this.pintaDirectores(this.cPeliculas.getDirectoresYPeliculas());
   }
   private cargaHTML(): void {
-    this.HTML.vistas = document.querySelector(".js-lista-vistas");
-    this.HTML.numVistas = document.querySelector(".js-n-peliculas-vistas");
-    this.HTML.pendientes = document.querySelector(".js-lista-pendientes");
-    this.HTML.numPendientes = document.querySelector(".js-n-peliculas-pendientes");
-    this.HTML.peliculaValorada = document.querySelector(".js-mejor-valorada");
-    this.HTML.peliculaOscars = document.querySelector(".js-mas-oscars");
-    this.HTML.peliculaReciente = document.querySelector(".js-mas-reciente");
-    this.HTML.peliculaBase = document.querySelector(".js-pelicula-base");
-    this.HTML.directores = document.querySelector(".js-mejor-valorada");
-    this.HTML.directores = document.querySelector(".js-lista-directores");
-    this.HTML.directorBase = document.querySelector(".js-director-base");
-    this.HTML.peliculaDirectorBase = document.querySelector(".js-pelicula-director-base");
+    this.htmlVistas = document.querySelector(".js-lista-vistas");
+    this.htmlNumVistas = document.querySelector(".js-n-peliculas-vistas");
+    this.htmlPendientes = document.querySelector(".js-lista-pendientes");
+    this.htmlNumPendientes = document.querySelector(".js-n-peliculas-pendientes");
+    this.htmlPeliculaValorada = document.querySelector(".js-mejor-valorada");
+    this.htmlPeliculaOscars = document.querySelector(".js-mas-oscars");
+    this.htmlPeliculaReciente = document.querySelector(".js-mas-reciente");
+    this.htmlPeliculaBase = document.querySelector(".js-pelicula-base");
+    this.htmlDirectores = document.querySelector(".js-lista-directores");
+    this.htmlDirectorBase = document.querySelector(".js-director-base");
+    this.htmlPeliculaDirectorBase = document.querySelector(".js-pelicula-director-base");
   }
 
   private pintaNumPeliculas() {
-    this.HTML.numPendientes.textContent = this.cPeliculas.getNumPeliculas(false);
-    this.HTML.numVistas.textContent = this.cPeliculas.getNumPeliculas(true);
+    this.htmlNumPendientes.textContent = this.cPeliculas.getNumPeliculas(false).toString();
+    this.htmlNumVistas.textContent = this.cPeliculas.getNumPeliculas(true).toString();
   }
   private limpiarLista(wrapper: HTMLElement) {
     wrapper.querySelectorAll(".js-pelicula").forEach((item) => { item.remove(); });
@@ -41,7 +57,7 @@ export class VistaPeliculas {
   private pintaPeliculas(peliculas: Pelicula[], wrapper: HTMLElement) {
     this.limpiarLista(wrapper);
     for (const pelicula of peliculas) {
-      const item: HTMLElement = this.HTML.peliculaBase.cloneNode(true);
+      const item: HTMLElement = this.htmlPeliculaBase.cloneNode(true) as HTMLElement;
       item.querySelector(".js-titulo").textContent = pelicula.titulo;
       item.querySelector(".js-director").textContent = pelicula.director;
       item.querySelector(".js-anyo").textContent = pelicula.fecha.getFullYear().toString();
@@ -81,19 +97,21 @@ export class VistaPeliculas {
   }
 
   private pintaDirectores(directoresPeliculas: DirectorPeliculas[]) {
-    (this.HTML.directores as HTMLUListElement).querySelectorAll("li").forEach((e) => { e.remove(); });
+    // Limpiamos los contenidos
+    this.htmlDirectores.querySelectorAll("li").forEach((e) => { e.remove(); });
     for (const director of directoresPeliculas) {
-      const directorElement: HTMLElement = this.HTML.directorBase.cloneNode(true);
+      const directorElement: HTMLElement = this.htmlDirectorBase.cloneNode(true) as HTMLElement;
       directorElement.querySelector(".js-director").textContent = director.nombre;
       const directoresPeliculasElement = directorElement.querySelector(".js-lista-peliculas-directores");
+      // Limpiamos los contenidos
       directoresPeliculasElement.childNodes.forEach((e) => { e.remove(); });
       for (const p of director.peliculas) {
-        const item: HTMLElement = this.HTML.peliculaDirectorBase.cloneNode(true);
+        const item: HTMLElement = this.htmlPeliculaDirectorBase.cloneNode(true) as HTMLElement;
         item.querySelector(".js-titulo").textContent = p.titulo;
         item.querySelector(".js-anyo").textContent = p.fecha.getFullYear().toString();
         directorElement.appendChild(item);
       }
-      this.HTML.directores.appendChild(directorElement);
+      this.htmlDirectores.appendChild(directorElement);
     }
   }
 }

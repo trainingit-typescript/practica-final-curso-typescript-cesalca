@@ -6,9 +6,11 @@ import * as dataJSON from "./peliculas.json";
 export class ControladorPeliculas {
 
   private peliculas: Pelicula[] = [];
+
   constructor() {
     this.cargarPeliculas();
   }
+
   private cargarPeliculas(): void {
     for (const data of dataJSON.peliculas) {
       this.peliculas.push(new Pelicula(
@@ -49,9 +51,10 @@ export class ControladorPeliculas {
     const directores: DirectorPeliculas[] = this.peliculas.map(pelicula => {
       return {
         nombre: pelicula.director,
-        peliculas: this.peliculas.filter( (p) => p.director === pelicula.director),
+        peliculas: this.peliculas.filter((p) => p.director === pelicula.director),
       } as DirectorPeliculas;
     });
-    return directores.filter((director, indice, listaDirectores) => listaDirectores.findIndex(item => item.nombre === director.nombre /*&& item.peliculas === director.peliculas*/) === indice);
+    // Puesto que peliculas se genera a partir de director, no es necesario compararlo
+    return directores.filter((director, indice, listaDirectores) => listaDirectores.findIndex(item => item.nombre === director.nombre) === indice);
   }
 }
